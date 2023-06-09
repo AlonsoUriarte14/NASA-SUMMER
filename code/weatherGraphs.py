@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import bme680 as bm
+import time
 
 
 class GroveBME680(object):
@@ -37,7 +38,67 @@ class GroveBME680(object):
         return None
 
 
-def animate(frame, sensor, tempPlot, pressurePlot, humidityPlot, gasPlot, x, y):
+def airQuality(sensor, gas_baseline):
+    air_quality_score = None
+    # Set the humidity baseline to 40%, an optimal indoor humidity.
+    hum_baseline = 40.0
+
+    # This sets the balance between humidity and gas reading in the
+    # calculation of air_quality_score (25:75, humidity:gas)
+    hum_weighting = 0.25
+
+    if sensor.get_sensor_data() and sensor.data.heat_stable:
+        gas = sensor.data.gas_resistance
+        gas_offset = gas_baseline - gas
+
+        hum = sensor.data.humidity
+        hum_offset = hum - hum_baseline
+
+        # Calculate hum_score as the distance from the hum_baseline.
+        if hum_offset > 0:
+            hum_score = 100 - hum_baseline - hum_offset
+            hum_score /= 100 - hum_baseline
+            hum_score *= hum_weighting * 100
+
+        else:
+            hum_score = hum_baseline + hum_offset
+            hum_score /= hum_baseline
+            hum_score *= hum_weighting * 100
+
+        # Calculate gas_score as the distance from the gas_baseline.
+        if gas_offset > 0:
+            gas_score = gas / gas_baseline
+            gas_score *= 100 - (hum_weighting * 100)
+
+        else:
+            gas_score = 100 - (hum_weighting * 100)
+
+        # Calculate air_quality_score.
+        air_quality_score = hum_score + gas_score
+
+        # print(
+        #     "Gas: {0:.2f} Ohms,humidity: {1:.2f} %RH,air quality: {2:.2f}".format(
+        #         gas, hum, air_quality_score
+        #     )
+        # )
+
+        time.sleep(0.3)
+
+    return air_quality_score
+
+
+def animate(
+    frame,
+    sensor,
+    tempPlot,
+    pressurePlot,
+    humidityPlot,
+    gasPlot,
+    airQualityPlot,
+    x,
+    y,
+    gas_baseline,
+):
     # read temp from grove sensor
     data = sensor.read()
 
@@ -48,13 +109,16 @@ def animate(frame, sensor, tempPlot, pressurePlot, humidityPlot, gasPlot, x, y):
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
+        y["airQuality"].append(airQuality(sensor, gas_baseline))
 
         # limit x and y axis to 20 items to plot
-        x = x[-20:]
-        y["temp"] = y["temp"][-20:]
-        y["pressure"] = y["pressure"][-20:]
-        y["humidity"] = y["humidity"][-20:]
-        y["gas"] = y["gas"][-20:]
+        if len(x) > 20:
+            x = x[-20:]
+            y["temp"] = y["temp"][-20:]
+            y["pressure"] = y["pressure"][-20:]
+            y["humidity"] = y["humidity"][-20:]
+            y["gas"] = y["gas"][-20:]
+            y["airQuality"] = y["airQuality"][-20:]
 
         # test uncomment
         # tempPlot.clear()
@@ -66,48 +130,69 @@ def animate(frame, sensor, tempPlot, pressurePlot, humidityPlot, gasPlot, x, y):
         pressurePlot.plot(x, y["pressure"], "g")
         humidityPlot.plot(x, y["humidity"], "b")
         gasPlot.plot(x, y["gas"], "k")
+        airQualityPlot.plot(x, y["airQuality"], "g")
 
 
-fig = plt.figure()
+fig = plt.figure(tight_layout=True)
 fig.suptitle("Weather Station Data")
-tempPlot = fig.add_subplot(221)
-pressurePlot = fig.add_subplot(222)
-humidityPlot = fig.add_subplot(223)
-gasPlot = fig.add_subplot(224)
+tempPlot = fig.add_subplot(231)
+pressurePlot = fig.add_subplot(232)
+humidityPlot = fig.add_subplot(233)
+gasPlot = fig.add_subplot(234)
+airQualityPlot = fig.add_subplot(235)
 
 
 tempPlot.set_title("Temperature (°F) vs Time (s)")
 pressurePlot.set_title("Pressure (hPa) vs Time (s)")
 humidityPlot.set_title("Humidity (%RH) vs Time (s)")
 gasPlot.set_title("Gas Resistance (Ω) vs Time (s)")
+airQualityPlot.set_title("Air Quality Index vs Time (s)")
 
 # atmospheric pressure at sealevel for reference
 pressurePlot.axhline(y=1013.25, color="blue")
 pressurePlot.legend(["Pressure at Sea Level", "Current Pressure"])
-
+# optimal inddor humidy level for reference
 humidityPlot.axhline(y=40, color="g")
 humidityPlot.legend(["Optimal Indoor Humidity", "Current Humidity"])
+# x is time
 x = []
-y = {
-    "temp": [],
-    "pressure": [],
-    "humidity": [],
-    "gas": [],
-}
-
-
-fig.tight_layout()
-# tempPlot.set_xticks([])
-# pressurePlot.set_xticks([])
-# humidityPlot.set_xticks([])
-# gasPlot.set_xticks([])
-
+# y is dictionary of different y values depending on the subplot
+y = {"temp": [], "pressure": [], "humidity": [], "gas": [], "airQuality": []}
 
 sensor = GroveBME680()
+
+start_time = time.time()
+curr_time = time.time()
+burn_in_time = 100
+burn_in_data = []
+
+print("Collecting gas resistance burn-in data for close to 2 mins\n")
+while (curr_time - start_time) < burn_in_time:
+    curr_time = time.time()
+    if sensor.get_sensor_data() and sensor.data.heat_stable:
+        gas = sensor.data.gas_resistance
+        burn_in_data.append(gas)
+        print("Gas: {0} Ohms".format(gas))
+        time.sleep(0.3)
+
+# check that 50 still happens; else just lower
+gas_baseline = sum(burn_in_data[-50:]) / 50.0
+
+
 ani = animation.FuncAnimation(
     fig,
     animate,
-    fargs=(sensor, tempPlot, pressurePlot, humidityPlot, gasPlot, x, y),
+    fargs=(
+        sensor,
+        tempPlot,
+        pressurePlot,
+        humidityPlot,
+        gasPlot,
+        airQualityPlot,
+        x,
+        y,
+        gas_baseline,
+    ),
     interval=500,
 )
 plt.show()
