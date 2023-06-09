@@ -109,16 +109,18 @@ def animate(
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
-        y["airQuality"].append(airQuality(sensor, gas_baseline))
+
+        aqi = airQuality(sensor, gas_baseline)
+        if aqi:
+            y["airQuality"].append(aqi)
 
         # limit x and y axis to 20 items to plot
-        if len(x) > 20:
-            x = x[-20:]
-            y["temp"] = y["temp"][-20:]
-            y["pressure"] = y["pressure"][-20:]
-            y["humidity"] = y["humidity"][-20:]
-            y["gas"] = y["gas"][-20:]
-            y["airQuality"] = y["airQuality"][-20:]
+        x = x[-20:]
+        y["temp"] = y["temp"][-20:]
+        y["pressure"] = y["pressure"][-20:]
+        y["humidity"] = y["humidity"][-20:]
+        y["gas"] = y["gas"][-20:]
+        y["airQuality"] = y["airQuality"][-20:]
 
         # test uncomment
         # tempPlot.clear()
