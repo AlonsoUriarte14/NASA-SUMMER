@@ -163,10 +163,10 @@ sensor = GroveBME680()
 
 start_time = time.time()
 curr_time = time.time()
-burn_in_time = 100
+burn_in_time = 300
 burn_in_data = []
 
-print("Collecting gas resistance burn-in data for close to 2 mins\n")
+print("Collecting gas resistance burn-in data for close to 5 mins\n")
 while (curr_time - start_time) < burn_in_time:
     curr_time = time.time()
     data = sensor.read()
@@ -174,11 +174,12 @@ while (curr_time - start_time) < burn_in_time:
         gas = data.gas_resistance
         burn_in_data.append(gas)
         print("Gas: {0} Ohms".format(gas))
-        time.sleep(0.3)
+        time.sleep(1)
 
 # check that 50 still happens; else just lower
 gas_baseline = sum(burn_in_data[-50:]) / 50.0
 
+# gas_baseline = 182885.32792970657
 print("HARDCODE THIS GAS_BASELINE FOR ROY LAB: ", gas_baseline)
 
 ani = animation.FuncAnimation(
