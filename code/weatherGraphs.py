@@ -103,6 +103,7 @@ def animate(
     x,
     y,
     gas_baseline,
+    start_time,
 ):
     # read temp from grove sensor
     data = sensor.read()
@@ -113,7 +114,8 @@ def animate(
 
     if data and data.heat_stable:
         # append data to x and y lists
-        x.append(datetime.now().strftime("%d"))
+        curr = start_time + (time.time() - start_time)
+        x.append(curr)
         y["temp"].append(data.temperature)
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
@@ -190,6 +192,7 @@ sensor = GroveBME680()
 
 # measured in Roy's Laboratory
 gas_baseline = 127964.22104496269
+start_time = time.time()
 ani = animation.FuncAnimation(
     fig,
     animate,
@@ -203,6 +206,7 @@ ani = animation.FuncAnimation(
         x,
         y,
         gas_baseline,
+        start_time,
     ),
     interval=500,
     cache_frame_data=False,
