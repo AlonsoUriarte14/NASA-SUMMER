@@ -171,7 +171,7 @@ burn_in_data = []
 print("Collecting gas resistance burn-in data for close to 2 mins\n")
 while (curr_time - start_time) < burn_in_time:
     curr_time = time.time()
-    if sensor.get_sensor_data() and sensor.data.heat_stable:
+    if sensor.read() and sensor.data.heat_stable:
         gas = sensor.data.gas_resistance
         burn_in_data.append(gas)
         print("Gas: {0} Ohms".format(gas))
