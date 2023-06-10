@@ -46,12 +46,12 @@ def airQuality(sensor, gas_baseline):
     # This sets the balance between humidity and gas reading in the
     # calculation of air_quality_score (25:75, humidity:gas)
     hum_weighting = 0.25
-
-    if sensor.get_sensor_data() and sensor.data.heat_stable:
-        gas = sensor.data.gas_resistance
+    data = sensor.read()
+    if data and data.heat_stable:
+        gas = data.gas_resistance
         gas_offset = gas_baseline - gas
 
-        hum = sensor.data.humidity
+        hum = data.humidity
         hum_offset = hum - hum_baseline
 
         # Calculate hum_score as the distance from the hum_baseline.
