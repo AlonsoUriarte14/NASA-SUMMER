@@ -173,7 +173,7 @@ while (curr_time - start_time) < burn_in_time:
     curr_time = time.time()
     data = sensor.read()
     if data and data.heat_stable:
-        gas = sensor.data.gas_resistance
+        gas = data.gas_resistance
         burn_in_data.append(gas)
         print("Gas: {0} Ohms".format(gas))
         time.sleep(0.3)
