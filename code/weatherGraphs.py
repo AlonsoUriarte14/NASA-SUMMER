@@ -104,6 +104,8 @@ def animate(
 
     print(data)
     aqi = airQuality(sensor, gas_baseline)
+    print("AQI is", aqi)
+
     if data and data.heat_stable and aqi:
         # append data to x and y lists
         x.append(datetime.now().strftime("%d"))
