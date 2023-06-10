@@ -88,7 +88,7 @@ def airQuality(sensor, gas_baseline):
 
 
 def animate(
-    frame,
+    i,
     sensor,
     tempPlot,
     pressurePlot,
@@ -102,6 +102,7 @@ def animate(
     # read temp from grove sensor
     data = sensor.read()
 
+    print(data)
     aqi = airQuality(sensor, gas_baseline)
     if data and data.heat_stable and aqi:
         # append data to x and y lists
@@ -126,6 +127,7 @@ def animate(
         # humidityPlot.clear()
         # gasPlot.clear()
 
+        print(x, y)
         tempPlot.plot(x, y["temp"], "r")
         pressurePlot.plot(x, y["pressure"], "g")
         humidityPlot.plot(x, y["humidity"], "b")
@@ -161,27 +163,26 @@ y = {"temp": [], "pressure": [], "humidity": [], "gas": [], "airQuality": []}
 
 sensor = GroveBME680()
 
-start_time = time.time()
-curr_time = time.time()
-burn_in_time = 300
-burn_in_data = []
+# start_time = time.time()
+# curr_time = time.time()
+# burn_in_time = 300
+# burn_in_data = []
 
-print("Collecting gas resistance burn-in data for close to 5 mins\n")
-while (curr_time - start_time) < burn_in_time:
-    curr_time = time.time()
-    data = sensor.read()
-    if data and data.heat_stable:
-        gas = data.gas_resistance
-        burn_in_data.append(gas)
-        print("Gas: {0} Ohms".format(gas))
-        time.sleep(1)
+# print("Collecting gas resistance burn-in data for close to 5 mins\n")
+# while (curr_time - start_time) < burn_in_time:
+#     curr_time = time.time()
+#     data = sensor.read()
+#     if data and data.heat_stable:
+#         gas = data.gas_resistance
+#         burn_in_data.append(gas)
+#         print("Gas: {0} Ohms".format(gas))
+#         time.sleep(1)
 
-# check that 50 still happens; else just lower
-gas_baseline = sum(burn_in_data[-50:]) / 50.0
+# # check that 50 still happens; else just lower
+# gas_baseline = sum(burn_in_data[-50:]) / 50.0
 
-# gas_baseline = 182885.32792970657
-print("HARDCODE THIS GAS_BASELINE FOR ROY LAB: ", gas_baseline)
-
+# measured in Roy's Laboratory
+gas_baseline = 127964.22104496269
 ani = animation.FuncAnimation(
     fig,
     animate,
