@@ -47,6 +47,9 @@ def airQuality(sensor, gas_baseline):
     # calculation of air_quality_score (25:75, humidity:gas)
     hum_weighting = 0.25
     data = sensor.read()
+
+    print("data in air quality function")
+    print(data.heat_stable)
     if data and data.heat_stable:
         gas = data.gas_resistance
         gas_offset = gas_baseline - gas
