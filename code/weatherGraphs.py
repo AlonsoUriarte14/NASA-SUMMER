@@ -196,5 +196,6 @@ ani = animation.FuncAnimation(
         gas_baseline,
     ),
     interval=500,
+    cache_frame_data=False,
 )
 plt.show()
