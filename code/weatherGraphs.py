@@ -111,14 +111,14 @@ def animate(
     aqi = airQuality(sensor, gas_baseline)
     print("AQI is", aqi)
 
-    if data and data.heat_stable and aqi:
+    if data and data.heat_stable:
         # append data to x and y lists
         x.append(datetime.now().strftime("%d"))
         y["temp"].append(data.temperature)
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
-        y["airQuality"].append(aqi)
+        # y["airQuality"].append(aqi)
 
         # limit x and y axis to 20 items to plot
         x = x[-20:]
@@ -139,7 +139,7 @@ def animate(
         pressurePlot.plot(x, y["pressure"], "g")
         humidityPlot.plot(x, y["humidity"], "b")
         gasPlot.plot(x, y["gas"], "k")
-        airQualityPlot.plot(x, y["airQuality"], "g")
+        # airQualityPlot.plot(x, y["airQuality"], "g")
 
 
 fig = plt.figure(tight_layout=True)
