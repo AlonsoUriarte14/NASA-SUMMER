@@ -102,17 +102,15 @@ def animate(
     # read temp from grove sensor
     data = sensor.read()
 
-    if data and data.heat_stable:
+    aqi = airQuality(sensor, gas_baseline)
+    if data and data.heat_stable and aqi:
         # append data to x and y lists
         x.append(datetime.now().strftime("%d"))
         y["temp"].append(data.temperature)
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
-
-        aqi = airQuality(sensor, gas_baseline)
-        if aqi:
-            y["airQuality"].append(aqi)
+        y["airQuality"].append(aqi)
 
         # limit x and y axis to 20 items to plot
         x = x[-20:]
@@ -181,6 +179,7 @@ while (curr_time - start_time) < burn_in_time:
 # check that 50 still happens; else just lower
 gas_baseline = sum(burn_in_data[-50:]) / 50.0
 
+print("HARDCODE THIS GAS_BASELINE FOR ROY LAB: ", gas_baseline)
 
 ani = animation.FuncAnimation(
     fig,
