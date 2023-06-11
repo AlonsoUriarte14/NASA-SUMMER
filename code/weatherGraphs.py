@@ -121,6 +121,10 @@ def animate(
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
+
+        print(
+            f"temperature : {data.temperature}, pressure : {data.pressure}, humidity : {data.humidity}, gas : {data.gas_resistance}"
+        )
         # y["airQuality"].append(aqi)
 
         # limit x and y axis to 20 items to plot
