@@ -6,6 +6,7 @@ ls -al /dev/i2c-*
 sudo ldto enable i2c-ao
 ls -al /dev/i2c-*
 
+sudo chmod +x enablei2c.sh
 
 pip3 install matplotlib
 

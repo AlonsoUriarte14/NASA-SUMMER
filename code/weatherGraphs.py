@@ -111,7 +111,7 @@ def animate(
         # append data to x and y lists
         curr = start_time + (time.time() - start_time)
         tempF = (data.temperature * 9 / 5) + 32
-        aqi = airQuality(sensor, gas_baseline)
+        aqi = airQuality(data, gas_baseline)
         print("AQI is", aqi)
 
         x.append(curr)
