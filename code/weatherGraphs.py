@@ -124,6 +124,7 @@ def animate(
     airQualityPlot,
     x,
     y,
+    gas_baseline,
     start_time,
 ):
     # read temp from grove sensor
@@ -134,8 +135,6 @@ def animate(
         curr = time.time() - start_time
         tempF = (data.temperature * 9 / 5) + 32
 
-        # default skip value is true; set to false for debugging outside of roy's lab
-        gas_baseline = calculateGasBaseline(sensor, skip=False)
         aqi = airQuality(data, gas_baseline)
 
         x.append(curr)
@@ -199,6 +198,8 @@ y = {"temp": [], "pressure": [], "humidity": [], "gas": [], "airQuality": []}
 
 sensor = GroveBME680()
 
+# default skip value is true; set to false for debugging outside of roy's lab
+gas_baseline = calculateGasBaseline(sensor, skip=False)
 
 start_time = time.time()
 ani = animation.FuncAnimation(
