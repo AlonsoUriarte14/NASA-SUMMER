@@ -38,6 +38,33 @@ class GroveBME680(object):
         return None
 
 
+def calculateGasBaseline(sensor, skip=True):
+    if skip:
+        # measured in Roy's Laboratory
+        gas_baseline = 127964.22104496269
+        return gas_baseline
+
+    start_time = time.time()
+    curr_time = time.time()
+    burn_in_time = 300
+    burn_in_data = []
+
+    print("Collecting gas resistance burn-in data for close to 5 mins\n")
+    while (curr_time - start_time) < burn_in_time:
+        curr_time = time.time()
+        data = sensor.read()
+        if data and data.heat_stable:
+            gas = data.gas_resistance
+            burn_in_data.append(gas)
+            print("Gas: {0} Ohms".format(gas))
+            time.sleep(1)
+
+    # check that 50 still happens; else just lower
+    gas_baseline = sum(burn_in_data[-50:]) / 50.0
+
+    return gas_baseline
+
+
 def airQuality(data, gas_baseline):
     air_quality_score = None
     # Set the humidity baseline to 40%, an optimal indoor humidity.
@@ -97,7 +124,6 @@ def animate(
     airQualityPlot,
     x,
     y,
-    gas_baseline,
     start_time,
 ):
     # read temp from grove sensor
@@ -107,6 +133,9 @@ def animate(
         # append data to x and y lists
         curr = time.time() - start_time
         tempF = (data.temperature * 9 / 5) + 32
+
+        # default skip value is true; set to false for debugging outside of roy's lab
+        gas_baseline = calculateGasBaseline(sensor, skip=False)
         aqi = airQuality(data, gas_baseline)
 
         x.append(curr)
@@ -151,7 +180,7 @@ gasPlot = fig.add_subplot(234)
 airQualityPlot = fig.add_subplot(235)
 
 
-tempPlot.set_title("Temperature (°C) vs Time (s)")
+tempPlot.set_title("Temperature (°F) vs Time (s)")
 pressurePlot.set_title("Pressure (hPa) vs Time (s)")
 humidityPlot.set_title("Humidity (%RH) vs Time (s)")
 gasPlot.set_title("Gas Resistance (Ω) vs Time (s)")
@@ -170,26 +199,7 @@ y = {"temp": [], "pressure": [], "humidity": [], "gas": [], "airQuality": []}
 
 sensor = GroveBME680()
 
-# start_time = time.time()
-# curr_time = time.time()
-# burn_in_time = 300
-# burn_in_data = []
 
-# print("Collecting gas resistance burn-in data for close to 5 mins\n")
-# while (curr_time - start_time) < burn_in_time:
-#     curr_time = time.time()
-#     data = sensor.read()
-#     if data and data.heat_stable:
-#         gas = data.gas_resistance
-#         burn_in_data.append(gas)
-#         print("Gas: {0} Ohms".format(gas))
-#         time.sleep(1)
-
-# # check that 50 still happens; else just lower
-# gas_baseline = sum(burn_in_data[-50:]) / 50.0
-
-# measured in Roy's Laboratory
-gas_baseline = 127964.22104496269
 start_time = time.time()
 ani = animation.FuncAnimation(
     fig,
@@ -203,7 +213,6 @@ ani = animation.FuncAnimation(
         airQualityPlot,
         x,
         y,
-        gas_baseline,
         start_time,
     ),
     interval=500,
