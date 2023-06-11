@@ -214,6 +214,7 @@ ani = animation.FuncAnimation(
         airQualityPlot,
         x,
         y,
+        gas_baseline,
         start_time,
     ),
     interval=500,
