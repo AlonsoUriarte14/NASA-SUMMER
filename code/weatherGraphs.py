@@ -48,10 +48,6 @@ def airQuality(data, gas_baseline):
     hum_weighting = 0.25
 
     if data and data.heat_stable:
-        print("hooopla")
-        print(data)
-        print(data.heat_stable)
-
         gas = data.gas_resistance
         gas_offset = gas_baseline - gas
 
@@ -112,7 +108,6 @@ def animate(
         curr = time.time() - start_time
         tempF = (data.temperature * 9 / 5) + 32
         aqi = airQuality(data, gas_baseline)
-        print("AQI is", aqi)
 
         x.append(curr)
         y["temp"].append(tempF)
@@ -121,7 +116,7 @@ def animate(
         y["gas"].append(data.gas_resistance)
 
         print(
-            f"temperature : {data.temperature}, pressure : {data.pressure}, humidity : {data.humidity}, gas : {data.gas_resistance}"
+            f"temperature : {data.temperature}, pressure : {data.pressure}, humidity : {data.humidity}, gas : {data.gas_resistance}, airQuality : {aqi}"
         )
         y["airQuality"].append(aqi)
 
@@ -139,7 +134,6 @@ def animate(
         # humidityPlot.clear()
         # gasPlot.clear()
 
-        print(x, y)
         tempPlot.plot(x, y["temp"], "r")
         pressurePlot.plot(x, y["pressure"], "g")
         humidityPlot.plot(x, y["humidity"], "b")
