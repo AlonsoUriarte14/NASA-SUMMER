@@ -148,6 +148,7 @@ def animate(
 
 
 fig = plt.figure(tight_layout=True)
+plt.style.use("seaborn-darkgrid")
 fig.suptitle("Weather Station Data")
 tempPlot = fig.add_subplot(231)
 pressurePlot = fig.add_subplot(232)
