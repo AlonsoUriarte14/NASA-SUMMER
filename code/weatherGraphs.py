@@ -38,7 +38,7 @@ class GroveBME680(object):
         return None
 
 
-def airQuality(sensor, gas_baseline):
+def airQuality(data, gas_baseline):
     air_quality_score = None
     # Set the humidity baseline to 40%, an optimal indoor humidity.
     hum_baseline = 40.0
@@ -46,7 +46,6 @@ def airQuality(sensor, gas_baseline):
     # This sets the balance between humidity and gas reading in the
     # calculation of air_quality_score (25:75, humidity:gas)
     hum_weighting = 0.25
-    data = sensor.read()
 
     if data and data.heat_stable:
         print("hooopla")
@@ -108,15 +107,14 @@ def animate(
     # read temp from grove sensor
     data = sensor.read()
 
-    print(data)
-    aqi = airQuality(sensor, gas_baseline)
-    print("AQI is", aqi)
-
     if data and data.heat_stable:
         # append data to x and y lists
         curr = start_time + (time.time() - start_time)
-        x.append(curr)
         tempF = (data.temperature * 9 / 5) + 32
+        aqi = airQuality(sensor, gas_baseline)
+        print("AQI is", aqi)
+
+        x.append(curr)
         y["temp"].append(tempF)
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
@@ -125,7 +123,7 @@ def animate(
         print(
             f"temperature : {data.temperature}, pressure : {data.pressure}, humidity : {data.humidity}, gas : {data.gas_resistance}"
         )
-        # y["airQuality"].append(aqi)
+        y["airQuality"].append(aqi)
 
         # limit x and y axis to 20 items to plot
         x = x[-20:]
@@ -146,7 +144,7 @@ def animate(
         pressurePlot.plot(x, y["pressure"], "g")
         humidityPlot.plot(x, y["humidity"], "b")
         gasPlot.plot(x, y["gas"], "k")
-        # airQualityPlot.plot(x, y["airQuality"], "g")
+        airQualityPlot.plot(x, y["airQuality"], "g")
 
 
 fig = plt.figure(tight_layout=True)
