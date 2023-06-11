@@ -116,7 +116,8 @@ def animate(
         # append data to x and y lists
         curr = start_time + (time.time() - start_time)
         x.append(curr)
-        y["temp"].append(data.temperature)
+        tempF = (data.temperature * 9 / 5) + 32
+        y["temp"].append(tempF)
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
@@ -153,7 +154,7 @@ gasPlot = fig.add_subplot(234)
 airQualityPlot = fig.add_subplot(235)
 
 
-tempPlot.set_title("Temperature (°F) vs Time (s)")
+tempPlot.set_title("Temperature (°C) vs Time (s)")
 pressurePlot.set_title("Pressure (hPa) vs Time (s)")
 humidityPlot.set_title("Humidity (%RH) vs Time (s)")
 gasPlot.set_title("Gas Resistance (Ω) vs Time (s)")
