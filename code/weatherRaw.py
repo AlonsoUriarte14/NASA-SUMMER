@@ -49,7 +49,7 @@ def main():
         data = sensor.read()
         if data:
             fmt = "{0:.2f} C, {1:.2f} hPa, {2:.2f} %RH".format(
-                data.temperature, data.pressure, data.humidity
+                data.temperature - 5, data.pressure, data.humidity
             )
             if data.heat_stable:
                 fmt += " {1} Ohms".format(fmt, data.gas_resistance)
