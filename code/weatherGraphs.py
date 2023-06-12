@@ -77,8 +77,8 @@ class GroveBME680(object):
         else:
             humScore = ((-0.25 / (100 - humReference) * humidity) + 0.416666) * 100
 
-        gasLower = 5000
-        gasUpper = 50000
+        gasLower = 10000
+        gasUpper = 300000
         if gas_baseline > gasUpper:
             gas_baseline = gasUpper
         else:
