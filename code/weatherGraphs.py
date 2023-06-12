@@ -89,6 +89,11 @@ class GroveBME680(object):
             - (gasLower * (0.75 / (gasUpper - gasLower)))
         ) * 100
 
+        if gasScore > 75:
+            gasScore = 75
+        if gasScore < 0:
+            gasScore = 0
+
         air_quality_score = humScore + gasScore
 
         return air_quality_score
