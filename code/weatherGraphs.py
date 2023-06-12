@@ -199,7 +199,7 @@ y = {"temp": [], "pressure": [], "humidity": [], "gas": [], "airQuality": []}
 sensor = GroveBME680()
 
 # default skip value is true; set to false for debugging outside of roy's lab
-gas_baseline = sensor.calculateGasBaseline(skip=False)
+gas_baseline = sensor.calculateGasBaseline()
 
 start_time = time.time()
 ani = animation.FuncAnimation(
