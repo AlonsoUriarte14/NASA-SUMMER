@@ -150,10 +150,10 @@ def animate(
         # gasPlot.clear()
 
         tempPlot.plot(x, y["temp"], "r")
-        pressurePlot.plot(x, y["pressure"], "g")
+        pressurePlot.plot(x, y["pressure"], "y")
         humidityPlot.plot(x, y["humidity"], "b")
         gasPlot.plot(x, y["gas"], "k")
-        airQualityPlot.plot(x, y["airQuality"], "g")
+        airQualityPlot.plot(x, y["airQuality"], "c")
 
 
 fig = plt.figure(tight_layout=True)
@@ -173,7 +173,7 @@ gasPlot.set_title("Gas Resistance (Ω) vs Time (s)")
 airQualityPlot.set_title("Air Quality Index vs Time (s)")
 
 # atmospheric pressure at sealevel for reference
-pressurePlot.axhline(y=1013.25, color="blue")
+pressurePlot.axhline(y=1013.25, color="g")
 pressurePlot.legend(["Pressure at Sea Level", "Current Pressure"])
 # optimal inddor humidy level for reference
 humidityPlot.axhline(y=40, color="g")
