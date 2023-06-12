@@ -45,7 +45,7 @@ class GroveBME680(object):
 
         start_time = time.time()
         curr_time = time.time()
-        burn_in_time = 300
+        burn_in_time = 75
         burn_in_data = []
 
         print("Collecting gas resistance burn-in data for close to 5 mins\n")
@@ -56,7 +56,7 @@ class GroveBME680(object):
                 gas = data.gas_resistance
                 burn_in_data.append(gas)
                 print("Gas: {0} Ohms".format(gas))
-                time.sleep(1)
+                time.sleep(0.5)
 
         # check that 50 still happens; else just lower
         gas_baseline = sum(burn_in_data[-50:]) / 50.0
@@ -65,49 +65,31 @@ class GroveBME680(object):
 
     def airQuality(self, data, gas_baseline):
         air_quality_score = None
-        # Set the humidity baseline to 40%, an optimal indoor humidity.
-        hum_baseline = 40.0
+        humScore = None
+        humReference = 40
 
-        # This sets the balance between humidity and gas reading in the
-        # calculation of air_quality_score (25:75, humidity:gas)
-        hum_weighting = 0.25
+        humidity = data.humidity
 
-        if data and data.heat_stable:
-            gas = data.gas_resistance
-            gas_offset = gas_baseline - gas
+        if humidity >= 38 and humidity <= 42:
+            humScore = 0.25 * 100
+        elif humidity < 38:
+            humScore = 0.25 / humReference * humidity * 100
+        else:
+            humScore = ((-0.25 / (100 - humReference) * humidity) + 0.416666) * 100
 
-            hum = data.humidity
-            hum_offset = hum - hum_baseline
+        gasLower = 5000
+        gasUpper = 50000
+        if gas_baseline > gasUpper:
+            gas_baseline = gasUpper
+        else:
+            gas_baseline = gasLower
 
-            # Calculate hum_score as the distance from the hum_baseline.
-            if hum_offset > 0:
-                hum_score = 100 - hum_baseline - hum_offset
-                hum_score /= 100 - hum_baseline
-                hum_score *= hum_weighting * 100
+        gasScore = (
+            0.75 / (gasUpper - gasLower) * gas_baseline
+            - (gasLower * (0.75 / (gasUpper - gasLower)))
+        ) * 100
 
-            else:
-                hum_score = hum_baseline + hum_offset
-                hum_score /= hum_baseline
-                hum_score *= hum_weighting * 100
-
-            # Calculate gas_score as the distance from the gas_baseline.
-            if gas_offset > 0:
-                gas_score = gas / gas_baseline
-                gas_score *= 100 - (hum_weighting * 100)
-
-            else:
-                gas_score = 100 - (hum_weighting * 100)
-
-            # Calculate air_quality_score.
-            air_quality_score = hum_score + gas_score
-
-            # print(
-            #     "Gas: {0:.2f} Ohms,humidity: {1:.2f} %RH,air quality: {2:.2f}".format(
-            #         gas, hum, air_quality_score
-            #     )
-            # )
-
-            time.sleep(0.3)
+        air_quality_score = humScore + gasScore
 
         return air_quality_score
 
