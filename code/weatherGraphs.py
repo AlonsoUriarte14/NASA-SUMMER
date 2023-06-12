@@ -37,81 +37,79 @@ class GroveBME680(object):
             return self.snr.data
         return None
 
+    def calculateGasBaseline(self, skip=True):
+        if skip:
+            # measured in Roy's Laboratory
+            gas_baseline = 127964.22104496269
+            return gas_baseline
 
-def calculateGasBaseline(sensor, skip=True):
-    if skip:
-        # measured in Roy's Laboratory
-        gas_baseline = 127964.22104496269
+        start_time = time.time()
+        curr_time = time.time()
+        burn_in_time = 300
+        burn_in_data = []
+
+        print("Collecting gas resistance burn-in data for close to 5 mins\n")
+        while (curr_time - start_time) < burn_in_time:
+            curr_time = time.time()
+            data = sensor.read()
+            if data and data.heat_stable:
+                gas = data.gas_resistance
+                burn_in_data.append(gas)
+                print("Gas: {0} Ohms".format(gas))
+                time.sleep(1)
+
+        # check that 50 still happens; else just lower
+        gas_baseline = sum(burn_in_data[-50:]) / 50.0
+
         return gas_baseline
 
-    start_time = time.time()
-    curr_time = time.time()
-    burn_in_time = 300
-    burn_in_data = []
+    def airQuality(self, data, gas_baseline):
+        air_quality_score = None
+        # Set the humidity baseline to 40%, an optimal indoor humidity.
+        hum_baseline = 40.0
 
-    print("Collecting gas resistance burn-in data for close to 5 mins\n")
-    while (curr_time - start_time) < burn_in_time:
-        curr_time = time.time()
-        data = sensor.read()
+        # This sets the balance between humidity and gas reading in the
+        # calculation of air_quality_score (25:75, humidity:gas)
+        hum_weighting = 0.25
+
         if data and data.heat_stable:
             gas = data.gas_resistance
-            burn_in_data.append(gas)
-            print("Gas: {0} Ohms".format(gas))
-            time.sleep(1)
+            gas_offset = gas_baseline - gas
 
-    # check that 50 still happens; else just lower
-    gas_baseline = sum(burn_in_data[-50:]) / 50.0
+            hum = data.humidity
+            hum_offset = hum - hum_baseline
 
-    return gas_baseline
+            # Calculate hum_score as the distance from the hum_baseline.
+            if hum_offset > 0:
+                hum_score = 100 - hum_baseline - hum_offset
+                hum_score /= 100 - hum_baseline
+                hum_score *= hum_weighting * 100
 
+            else:
+                hum_score = hum_baseline + hum_offset
+                hum_score /= hum_baseline
+                hum_score *= hum_weighting * 100
 
-def airQuality(data, gas_baseline):
-    air_quality_score = None
-    # Set the humidity baseline to 40%, an optimal indoor humidity.
-    hum_baseline = 40.0
+            # Calculate gas_score as the distance from the gas_baseline.
+            if gas_offset > 0:
+                gas_score = gas / gas_baseline
+                gas_score *= 100 - (hum_weighting * 100)
 
-    # This sets the balance between humidity and gas reading in the
-    # calculation of air_quality_score (25:75, humidity:gas)
-    hum_weighting = 0.25
+            else:
+                gas_score = 100 - (hum_weighting * 100)
 
-    if data and data.heat_stable:
-        gas = data.gas_resistance
-        gas_offset = gas_baseline - gas
+            # Calculate air_quality_score.
+            air_quality_score = hum_score + gas_score
 
-        hum = data.humidity
-        hum_offset = hum - hum_baseline
+            # print(
+            #     "Gas: {0:.2f} Ohms,humidity: {1:.2f} %RH,air quality: {2:.2f}".format(
+            #         gas, hum, air_quality_score
+            #     )
+            # )
 
-        # Calculate hum_score as the distance from the hum_baseline.
-        if hum_offset > 0:
-            hum_score = 100 - hum_baseline - hum_offset
-            hum_score /= 100 - hum_baseline
-            hum_score *= hum_weighting * 100
+            time.sleep(0.3)
 
-        else:
-            hum_score = hum_baseline + hum_offset
-            hum_score /= hum_baseline
-            hum_score *= hum_weighting * 100
-
-        # Calculate gas_score as the distance from the gas_baseline.
-        if gas_offset > 0:
-            gas_score = gas / gas_baseline
-            gas_score *= 100 - (hum_weighting * 100)
-
-        else:
-            gas_score = 100 - (hum_weighting * 100)
-
-        # Calculate air_quality_score.
-        air_quality_score = hum_score + gas_score
-
-        # print(
-        #     "Gas: {0:.2f} Ohms,humidity: {1:.2f} %RH,air quality: {2:.2f}".format(
-        #         gas, hum, air_quality_score
-        #     )
-        # )
-
-        time.sleep(0.3)
-
-    return air_quality_score
+        return air_quality_score
 
 
 def animate(
@@ -133,20 +131,22 @@ def animate(
     if data and data.heat_stable:
         # append data to x and y lists
         curr = time.time() - start_time
-        tempF = (data.temperature * 9 / 5) + 32
+        # default temperature offset due to heat produced by components
+        tempOffset = 5
+        tempF = ((data.temperature - tempOffset) * 9 / 5) + 32
 
-        aqi = airQuality(data, gas_baseline)
+        aqi = sensor.airQuality(data, gas_baseline)
 
         x.append(curr)
         y["temp"].append(tempF)
         y["pressure"].append(data.pressure)
         y["humidity"].append(data.humidity)
         y["gas"].append(data.gas_resistance)
+        y["airQuality"].append(aqi)
 
         print(
             f"temperature : {data.temperature}, pressure : {data.pressure}, humidity : {data.humidity}, gas : {data.gas_resistance}, airQuality : {aqi}"
         )
-        y["airQuality"].append(aqi)
 
         # limit x and y axis to 20 items to plot
         x = x[-20:]
@@ -199,7 +199,7 @@ y = {"temp": [], "pressure": [], "humidity": [], "gas": [], "airQuality": []}
 sensor = GroveBME680()
 
 # default skip value is true; set to false for debugging outside of roy's lab
-gas_baseline = calculateGasBaseline(sensor, skip=False)
+gas_baseline = sensor.calculateGasBaseline(skip=False)
 
 start_time = time.time()
 ani = animation.FuncAnimation(
