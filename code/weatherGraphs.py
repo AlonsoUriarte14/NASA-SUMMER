@@ -115,7 +115,14 @@ def animate(
     # read temp from grove sensor
     data = sensor.read()
 
-    if data and data.heat_stable:
+    if not data and not data.heat_stable:
+        try:
+            print("data is not object")
+            print(data)
+            print(f"heat_stable: {data.heat_stable}")
+        except Exception as e:
+            print(e)
+    elif data and data.heat_stable:
         # append data to x and y lists
         curr = time.time() - start_time
         # default temperature offset due to heat produced by components
